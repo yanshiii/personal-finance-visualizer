@@ -3,7 +3,12 @@
 import { useMemo } from "react";
 import { CATEGORIES } from "@/lib/constants";
 
-export default function SummaryCards({ transactions }) {
+const months = [
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December"
+];
+
+export default function SummaryCards({ transactions, month, year }) {
   const totals = useMemo(() => {
     const total = transactions.reduce((sum, t) => {
       let amount = t.amount;
@@ -34,17 +39,26 @@ export default function SummaryCards({ transactions }) {
     return { total, recent, topCategory };
   }, [transactions]);
 
+  // Create a period label (e.g., "April 2025")
+  const periodLabel = month !== undefined && year !== undefined 
+    ? `${months[month]} ${year}` 
+    : '';
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
       {/* Total Expenses Card */}
       <div className="bg-gradient-to-br from-blue-500 to-purple-600 text-white p-6 rounded-xl shadow-lg">
-        <h3 className="text-sm font-medium mb-2">Total Expenses</h3>
+        <h3 className="text-sm font-medium mb-2">
+          Total Expenses {periodLabel && `(${periodLabel})`}
+        </h3>
         <p className="text-3xl font-bold">₹{totals.total.toLocaleString()}</p>
       </div>
 
       {/* Top Category Card */}
       <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-        <h3 className="text-sm font-medium mb-2">Top Category</h3>
+        <h3 className="text-sm font-medium mb-2">
+          Top Category {periodLabel && `(${periodLabel})`}
+        </h3>
         <p className="text-2xl font-bold text-gray-900">
           {totals.topCategory.name || "N/A"}
         </p>
@@ -55,7 +69,9 @@ export default function SummaryCards({ transactions }) {
 
       {/* Recent Transactions Card */}
       <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-        <h3 className="text-sm font-medium mb-4">Recent Transactions</h3>
+        <h3 className="text-sm font-medium mb-4">
+          Recent Transactions {periodLabel && `(${periodLabel})`}
+        </h3>
         <div className="space-y-3">
           {totals.recent.length === 0 ? (
             <p className="text-gray-400 text-sm">No recent transactions.</p>
