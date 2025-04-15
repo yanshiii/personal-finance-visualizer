@@ -1,14 +1,22 @@
-"use client";
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
+// Define your categories
+const categories = [
+  "Groceries",
+  "Rent",
+  "Transport",
+  "Entertainment",
+  "Utilities"
+];
+
 function TransactionForm({ setTransactions }) {
   const [amount, setAmount] = useState("");
   const [date, setDate] = useState("");
   const [description, setDescription] = useState("");
+  const [category, setCategory] = useState(categories[0]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -18,8 +26,11 @@ function TransactionForm({ setTransactions }) {
     // Trim whitespace from description
     const trimmedDescription = description.trim();
 
+    // Today's date in yyyy-mm-dd format
+    const todayStr = new Date().toISOString().split('T')[0];
+
     // Validation checks
-    if (!amount || !date || !trimmedDescription) {
+    if (!amount || !date || !trimmedDescription || !category) {
       setError("All fields are required!");
       return;
     }
@@ -29,7 +40,7 @@ function TransactionForm({ setTransactions }) {
       return;
     }
 
-    if (new Date(date) > new Date()) {
+    if (date > todayStr) {
       setError("Date cannot be in the future");
       return;
     }
@@ -43,22 +54,22 @@ function TransactionForm({ setTransactions }) {
     setError("");
 
     try {
-      // Create new transaction object
+      // Create new transaction object (INCLUDE CATEGORY)
       const newTransaction = {
         amount: `₹${Number(amount).toFixed(2)}`,
         date: date,
         description: trimmedDescription,
+        category: category,
       };
 
-      // Update parent state
       setTransactions((prev) => [...prev, newTransaction]);
 
       // Reset form
       setAmount("");
       setDate("");
       setDescription("");
+      setCategory(categories[0]);
     } catch (err) {
-      console.error(err);
       setError("Failed to add transaction. Please try again.");
     } finally {
       setLoading(false);
@@ -78,8 +89,6 @@ function TransactionForm({ setTransactions }) {
           onChange={(e) => setAmount(e.target.value)}
           placeholder="Enter amount"
           className="mt-2"
-          min="0.01"
-          step="0.01"
         />
       </div>
       <div>
@@ -92,8 +101,23 @@ function TransactionForm({ setTransactions }) {
           value={date}
           onChange={(e) => setDate(e.target.value)}
           className="mt-2"
-          max={new Date().toISOString().split('T')[0]}
+          max={new Date().toISOString().split('T')[0]} // Prevent future dates
         />
+      </div>
+      <div>
+        <Label htmlFor="category" className="text-sm font-medium text-gray-700">
+          Category
+        </Label>
+        <select
+          id="category"
+          value={category}
+          onChange={(e) => setCategory(e.target.value)}
+          className="mt-2 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+        >
+          {categories.map((cat) => (
+            <option key={cat} value={cat}>{cat}</option>
+          ))}
+        </select>
       </div>
       <div>
         <Label htmlFor="description" className="text-sm font-medium text-gray-700">
@@ -106,15 +130,10 @@ function TransactionForm({ setTransactions }) {
           onChange={(e) => setDescription(e.target.value)}
           placeholder="Enter description"
           className="mt-2"
-          maxLength={50}
         />
       </div>
-      {error && <p className="text-red-500 text-sm">{error}</p>}
-      <Button 
-        type="submit" 
-        className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white py-2 rounded-md hover:from-blue-600 hover:to-purple-700 transition-colors"
-        disabled={loading}
-      >
+      {error && <p className="text-red-500">{error}</p>}
+      <Button type="submit" className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white py-2 rounded-md">
         {loading ? "Adding..." : "Add Transaction"}
       </Button>
     </form>

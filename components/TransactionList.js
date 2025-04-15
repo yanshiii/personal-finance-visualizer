@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Pencil, Trash2 } from "lucide-react";
+import { CATEGORIES } from "@/lib/constants";
 
 function TransactionList({ transactions, setTransactions }) {
   const [editingIndex, setEditingIndex] = useState(null);
@@ -13,8 +14,13 @@ function TransactionList({ transactions, setTransactions }) {
   const sortedTransactions = [...transactions].sort((a, b) => new Date(b.date) - new Date(a.date));
 
   const handleEditClick = (index) => {
+    // Make a deep copy of the transaction to edit
     setEditingIndex(index);
-    setEditedTransaction(sortedTransactions[index]);
+    // Ensure all properties exist in the edited transaction
+    setEditedTransaction({
+      ...sortedTransactions[index],
+      amount: sortedTransactions[index].amount || ""
+    });
   };
 
   const handleSaveClick = () => {
@@ -54,7 +60,10 @@ function TransactionList({ transactions, setTransactions }) {
               <input
                 name="amount"
                 type="number"
-                value={editedTransaction.amount}
+                // Safely handle the amount conversion
+                value={typeof editedTransaction.amount === 'string' ? 
+                  editedTransaction.amount.replace(/[₹,]/g, '') : 
+                  editedTransaction.amount || ''}
                 onChange={handleChange}
                 placeholder="Amount"
                 className="mb-1 text-center border rounded p-1 text-sm"
@@ -63,14 +72,26 @@ function TransactionList({ transactions, setTransactions }) {
               <input
                 name="date"
                 type="date"
-                value={editedTransaction.date}
+                value={editedTransaction.date || ''}
                 onChange={handleChange}
                 className="mb-1 text-center border rounded p-1 text-sm"
                 style={{ width: 110 }}
+                max={new Date().toISOString().split('T')[0]}
               />
+              <select
+                name="category"
+                value={editedTransaction.category || ''}
+                onChange={handleChange}
+                className="mb-1 text-center border rounded p-1 text-sm"
+                style={{ width: 110 }}
+              >
+                {CATEGORIES.map(cat => (
+                  <option key={cat.id} value={cat.id}>{cat.name}</option>
+                ))}
+              </select>
               <input
                 name="description"
-                value={editedTransaction.description}
+                value={editedTransaction.description || ''}
                 onChange={handleChange}
                 placeholder="Description"
                 className="mb-1 text-center border rounded p-1 text-sm"
@@ -88,9 +109,19 @@ function TransactionList({ transactions, setTransactions }) {
           ) : (
             <>
               <div className="flex flex-col items-center flex-grow">
-                <p className="font-bold text-lg mb-1">{transaction.amount}</p>
-                <p className="text-sm text-gray-600">{transaction.date}</p>
-                <p className="text-sm text-gray-600">{transaction.description}</p>
+                <p className="font-bold text-lg mb-1">{transaction.amount || '₹0'}</p>
+                <p className="text-sm text-gray-600">{transaction.date || 'No date'}</p>
+                <p className="text-sm text-gray-600">{transaction.description || 'No description'}</p>
+                {/* Category display */}
+                <div className="flex items-center gap-2 mt-2">
+                  <span
+                    className="w-3 h-3 rounded-full"
+                    style={{ backgroundColor: CATEGORIES.find(c => c.id === transaction.category)?.color || '#cccccc' }}
+                  ></span>
+                  <span className="text-sm text-gray-600">
+                    {CATEGORIES.find(c => c.id === transaction.category)?.name || 'Uncategorized'}
+                  </span>
+                </div>
               </div>
               <div className="flex gap-3 mt-3">
                 <button
